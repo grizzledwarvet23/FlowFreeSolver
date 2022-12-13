@@ -13,6 +13,7 @@ public class Main {
     public static final String WHITE = "\u001B[37m";
 
     public static HashMap<Character, String> map;
+    public static HashMap<Character, Color> colorMap;
 
     static int c = 0;
 
@@ -23,9 +24,22 @@ public class Main {
         map.put('y', YELLOW);
         map.put('g', GREEN);
         map.put('w', WHITE);
+
+        colorMap = new HashMap<>();
+        colorMap.put('r', Color.RED);
+        colorMap.put('b', Color.BLUE);
+        colorMap.put('y', Color.YELLOW);
+        colorMap.put('g', Color.GREEN);
+        colorMap.put('w', Color.WHITE);
+        colorMap.put('o', Color.ORANGE);
+        colorMap.put('c', Color.CYAN);
+        colorMap.put('p', Color.PINK);
         Scanner in = new Scanner(System.in);
 
         while(true) {
+            //drawing panel imported to visualize the game board and algorithm
+            DrawingPanel panel = new DrawingPanel(800, 800);
+            panel.setBackground(Color.BLACK);
             System.out.print("What is the size N of the grid?: ");
             int N = in.nextInt();
             in.nextLine();
@@ -53,6 +67,10 @@ public class Main {
                         if (!found) {
                             colors.add(new ColorPair(grid[i][j], j, i));
                         }
+                        Graphics g = panel.getGraphics();
+
+                        g.setColor(colorMap.get(Character.toLowerCase(grid[i][j])));
+                        g.fillRect(20*j, 20*i, 20, 20);
                     }
                 }
             }
@@ -61,13 +79,14 @@ public class Main {
             Stopwatch watch = new Stopwatch();
             printGrid(grid);
             watch.start();
-            solver(grid, colors, 0, colors.get(0).startPoint.x, colors.get(0).startPoint.y);
+            solver(grid, colors, panel, 0, colors.get(0).startPoint.x, colors.get(0).startPoint.y);
             watch.stop();
             System.out.println();
             printGrid(grid);
             System.out.println(watch.time() + " seconds to solve");
 
             System.out.println("DO it again? Y/N");
+            System.out.println();
             String line = in.nextLine();
             if(!line.toLowerCase().equals('y')) {
                 break;
@@ -99,7 +118,8 @@ public class Main {
 
     }
 
-    static boolean solver(char[][] grid, List<ColorPair> colors, int index, int currentX,
+    static boolean solver(char[][] grid, List<ColorPair> colors, DrawingPanel panel, int index,
+                          int currentX,
                        int currentY) {
         c++;
         //System.out.println("called " + c + " times. index: " + index);
@@ -111,7 +131,7 @@ public class Main {
                 return true;
             } else {
                 ColorPair nextPair = colors.get(index + 1);
-                boolean res = solver(grid, colors, index + 1, nextPair.startPoint.x,
+                boolean res = solver(grid, colors, panel, index + 1, nextPair.startPoint.x,
                         nextPair.startPoint.y);
                 if(res) {
                     return true;
@@ -142,8 +162,12 @@ public class Main {
             int newY = directions[i].startPoint.y;
             if(inBounds(grid, newX, newY) && (validSpot(grid, newX, newY) || grid[newY][newX] == pair.letter)) {
                 grid[newY][newX] = pair.pathLetter;
-                boolean res = solver(grid, colors, index, newX, newY);
+                panel.getGraphics().setColor(colorMap.get(pair.pathLetter));
+                panel.getGraphics().fillRect(newX * 20, newY * 20, 20, 20);
+                boolean res = solver(grid, colors, panel, index, newX, newY);
                 if(res) { return true; }
+                panel.getGraphics().setColor(Color.BLACK);
+                panel.getGraphics().fillRect(newX * 20, newY * 20, 20, 20);
                 grid[newY][newX] = '*';
             }
         }
