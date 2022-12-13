@@ -35,11 +35,11 @@ public class Main {
         colorMap.put('c', Color.CYAN);
         colorMap.put('p', Color.PINK);
         Scanner in = new Scanner(System.in);
-
-        while(true) {
+        DrawingPanel panel = new DrawingPanel(800, 800);
+        panel.setBackground(Color.BLACK);
+        while (true) {
             //drawing panel imported to visualize the game board and algorithm
-            DrawingPanel panel = new DrawingPanel(800, 800);
-            panel.setBackground(Color.BLACK);
+            panel.getGraphics().clearRect(0, 0, 800, 800);
             System.out.print("What is the size N of the grid?: ");
             int N = in.nextInt();
             in.nextLine();
@@ -70,7 +70,7 @@ public class Main {
                         Graphics g = panel.getGraphics();
 
                         g.setColor(colorMap.get(Character.toLowerCase(grid[i][j])));
-                        g.fillRect(20*j, 20*i, 20, 20);
+                        g.fillRect(20 * j, 20 * i, 20, 20);
                     }
                 }
             }
@@ -85,10 +85,9 @@ public class Main {
             printGrid(grid);
             System.out.println(watch.time() + " seconds to solve");
 
-            System.out.println("DO it again? Y/N");
-            System.out.println();
+            System.out.print("DO it again? Y/N");
             String line = in.nextLine();
-            if(!line.toLowerCase().equals('y')) {
+            if (!line.toLowerCase().contains("y")) {
                 break;
             }
         }
@@ -120,20 +119,20 @@ public class Main {
 
     static boolean solver(char[][] grid, List<ColorPair> colors, DrawingPanel panel, int index,
                           int currentX,
-                       int currentY) {
+                          int currentY) {
         c++;
         //System.out.println("called " + c + " times. index: " + index);
 
         ColorPair pair = colors.get(index);
 
-        if(currentX == pair.endPoint.x && currentY == pair.endPoint.y) { //if we are on the end
-            if(index + 1 >= colors.size()) {
+        if (currentX == pair.endPoint.x && currentY == pair.endPoint.y) { //if we are on the end
+            if (index + 1 >= colors.size()) {
                 return true;
             } else {
                 ColorPair nextPair = colors.get(index + 1);
                 boolean res = solver(grid, colors, panel, index + 1, nextPair.startPoint.x,
                         nextPair.startPoint.y);
-                if(res) {
+                if (res) {
                     return true;
                 }
             }
@@ -157,15 +156,17 @@ public class Main {
         //rank directions based on which is closer to point
 
 
-        for(int i = 0; i < dirX.length; i++) {
+        for (int i = 0; i < dirX.length; i++) {
             int newX = directions[i].startPoint.x;
             int newY = directions[i].startPoint.y;
-            if(inBounds(grid, newX, newY) && (validSpot(grid, newX, newY) || grid[newY][newX] == pair.letter)) {
+            if (inBounds(grid, newX, newY) && (validSpot(grid, newX, newY) || grid[newY][newX] == pair.letter)) {
                 grid[newY][newX] = pair.pathLetter;
                 panel.getGraphics().setColor(colorMap.get(pair.pathLetter));
                 panel.getGraphics().fillRect(newX * 20, newY * 20, 20, 20);
                 boolean res = solver(grid, colors, panel, index, newX, newY);
-                if(res) { return true; }
+                if (res) {
+                    return true;
+                }
                 panel.getGraphics().setColor(Color.BLACK);
                 panel.getGraphics().fillRect(newX * 20, newY * 20, 20, 20);
                 grid[newY][newX] = '*';
@@ -183,9 +184,9 @@ public class Main {
     }
 
     private static void printGrid(char[][] grid) {
-        for(int i = 0; i < grid.length; i++) {
-            for(char c : grid[i]) {
-                if(map.get(c) != null) {
+        for (int i = 0; i < grid.length; i++) {
+            for (char c : grid[i]) {
+                if (map.get(c) != null) {
                     System.out.print(map.get(c) + c + map.get(c));
                 } else {
                     System.out.print(map.get('w') + c + map.get('w'));
@@ -211,21 +212,19 @@ class ColorPair implements Comparable<ColorPair> {
     }
 
     private double getDist() {
-        return Math.sqrt(Math.pow(startPoint.x- endPoint.x, 2) + Math.pow(startPoint.y - endPoint.y,
+        return Math.sqrt(Math.pow(startPoint.x - endPoint.x, 2) + Math.pow(startPoint.y - endPoint.y,
                 2));
     }
 
     public int compareTo(ColorPair other) {
-        if(getDist() - other.getDist() < 0) {
+        if (getDist() - other.getDist() < 0) {
             return -1;
-        } else if(getDist() - other.getDist() > 0) {
+        } else if (getDist() - other.getDist() > 0) {
             return 1;
         }
         return 0;
 
     }
-
-
 
 
 }
