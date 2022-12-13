@@ -13,4 +13,4 @@ It's recursive backtracking approach, so it's not the most efficient. But, it ha
 
 A move starting from the orange in the 0-indexed row & col (1, 5) will start with a move to the left, while a move starting from the yellow at (4, 4) starts with a move to the right (which ends up being the correct solution for yellow). That is because we are sorting by lowest euclidian distance.
 
-Anyways, some improvements can be made and there have been some discussions on solving flow already.
+Anyways, some improvements can be made, and there have been some discussions on solving flow already.
