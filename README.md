@@ -33,16 +33,25 @@ take less than 0.1 seconds.
 
 Data (in seconds): 
 6x6 Mania times - 
+
 l1: 4.968E-4
+
 l2: 0.154402
+
 l3: 0.0017776
+
 l4: 0.1043191
+
 l5: 0.0211899
 
 7x7 mania times - 
+
 l83: 3.1592133
+
 l84: 0.0139016
+
 l85: 3.2735783
+
 l86: 0.4208853
 
 8x8 mania times - 
