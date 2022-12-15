@@ -15,8 +15,6 @@ public class Main {
     public static HashMap<Character, String> map;
     public static HashMap<Character, Color> colorMap;
 
-    static int c = 0;
-
     public static void main(String[] args) {
         map = new HashMap<>();
         map.put('r', RED);
@@ -74,7 +72,16 @@ public class Main {
                     }
                 }
             }
+
+
             Collections.sort(colors);
+
+            //iterate through colors, mark how many adjacent.
+            //it is absolutely sure that startAdjacent + endAdjacent >= 2
+
+            for (ColorPair color : colors) {
+                countAdjacentSquares(color, grid);
+            }
 
             Stopwatch watch = new Stopwatch();
             printGrid(grid);
@@ -98,7 +105,6 @@ public class Main {
          *  R***
          *  **R*
          *  ***B
-         *
          */
         //the output prints the color paths, like this
         /**
@@ -113,15 +119,11 @@ public class Main {
 
         //recursive function: when a potential path found, go to the next color pair and find its
         // path.
-        //
-
     }
 
     static boolean solver(char[][] grid, List<ColorPair> colors, DrawingPanel panel, int index,
                           int currentX,
                           int currentY) {
-        c++;
-        //System.out.println("called " + c + " times. index: " + index);
 
         ColorPair pair = colors.get(index);
 
@@ -140,8 +142,6 @@ public class Main {
             grid[currentY][currentX] = pair.pathLetter;
         }
 
-        int[] dirX = new int[]{-1, 0, 1, 0};
-        int[] dirY = new int[]{0, -1, 0, 1};
         ColorPair[] directions = new ColorPair[4];
         directions[0] = new ColorPair('-', currentX - 1, currentY);
         directions[0].endPoint = pair.endPoint;
@@ -156,23 +156,81 @@ public class Main {
         //rank directions based on which is closer to point
 
 
-        for (int i = 0; i < dirX.length; i++) {
+        for (int i = 0; i < directions.length; i++) {
             int newX = directions[i].startPoint.x;
             int newY = directions[i].startPoint.y;
-            if (inBounds(grid, newX, newY) && (validSpot(grid, newX, newY) || grid[newY][newX] == pair.letter)) {
+
+
+
+            if (inBounds(grid, newX, newY) && (validSpot(grid, newX, newY) || grid[newY][newX] == pair.letter)  ) {
                 grid[newY][newX] = pair.pathLetter;
                 panel.getGraphics().setColor(colorMap.get(pair.pathLetter));
                 panel.getGraphics().fillRect(newX * 20, newY * 20, 20, 20);
-                boolean res = solver(grid, colors, panel, index, newX, newY);
+                ArrayList<Integer> oldAdjacentStarts = new ArrayList<>();
+                ArrayList<Integer> oldAdjacentEnds = new ArrayList<>();
+
+                boolean res = true;
+                for(int c = index + 1; c < colors.size(); c++) {
+                    ColorPair colorToCheck = colors.get(c);
+                    oldAdjacentStarts.add(colorToCheck.startAdjacent);
+                    oldAdjacentEnds.add(colorToCheck.endAdjacent);
+                    checkConnected(grid, colorToCheck, newX, newY);
+                    if(colorToCheck.endAdjacent == 0) {
+                      //  res = false;
+                    }
+                }
+                res = res && solver(grid, colors, panel, index, newX, newY);
                 if (res) {
                     return true;
                 }
                 panel.getGraphics().setColor(Color.BLACK);
                 panel.getGraphics().fillRect(newX * 20, newY * 20, 20, 20);
                 grid[newY][newX] = '*';
+                int ind = 0;
+                for(int c = index + 1; c < colors.size(); c++) {
+                    colors.get(c).startAdjacent = oldAdjacentStarts.get(ind);
+                    colors.get(c).endAdjacent = oldAdjacentEnds.get(ind);
+                    ind++;
+                }
             }
         }
         return false;
+    }
+
+    private static void countAdjacentSquares(ColorPair color, char[][] grid) {
+        int[] xDir = new int[]{-1, 0, 1, 0};
+        int[] yDir = new int[]{0, -1, 0, 1};
+        for (int i = 0; i < xDir.length; i++) {
+            if (inBounds(grid, color.startPoint.x + xDir[i],  color.startPoint.y + yDir[i]) &&
+                    validSpot(grid, color.startPoint.x + xDir[i], color.startPoint.y + yDir[i])) {
+                color.startAdjacent++;
+            }
+            if (inBounds(grid, color.endPoint.x + xDir[i], color.endPoint.y + yDir[i]) &&
+                    validSpot(grid, color.endPoint.x + xDir[i], color.endPoint.y + yDir[i])) {
+                color.endAdjacent++;
+            }
+        }
+    }
+
+    private static void checkConnected(char[][] grid, ColorPair pair, int x, int y) {
+        int[] xDir = new int[]{-1, 0, 1, 0};
+        int[] yDir = new int[]{0, -1, 0, 1};
+        for (int i = 0; i < xDir.length; i++) {
+            int newX = x + xDir[i];
+            int newY = y + yDir[i];
+            if(inBounds(grid, newX, newY)) {
+                //check if this matches a start/endpoint starting after index, in colors
+//                for(int j = index + 1; j < colors.size(); j++) {
+//                    ColorPair pair = colors.get(j);
+                    if(pair.startPoint.x == newX && pair.startPoint.y == newY) {
+                        pair.startAdjacent--;
+                    } else if(pair.endPoint.x == newX && pair.endPoint.y == newY) {
+                        pair.endAdjacent--;
+                    }
+//                }
+            }
+        }
+      //  return null;
     }
 
     private static boolean inBounds(char[][] grid, int x, int y) {
@@ -203,6 +261,12 @@ class ColorPair implements Comparable<ColorPair> {
     char pathLetter;
     Point startPoint;
     Point endPoint;
+
+    //how many open squares are adjacent with the start and end points
+    //useful in determining when one's path makes a future one impossible
+    //neither should be 0
+    int startAdjacent;
+    int endAdjacent;
 
     public ColorPair(char letter, int startX, int startY) {
         this.letter = letter;
